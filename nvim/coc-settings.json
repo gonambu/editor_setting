@@ -1,0 +1,23 @@
+{
+	"yank.highlight.enable": false,
+	"languageserver": {
+		"golang": {
+			"command": "gopls",
+			"rootPatterns": ["go.mod", ".vim/", ".git/", ".hg/"],
+			"filetypes": ["go"],
+			"initializationOptions": {
+				"usePlaceholders": true
+			}
+		}
+	},
+	"jest.customFlags": ["maxWorkers=1"],
+	"snippets.extends": {
+		"typescriptreact": ["typescript"]
+	},
+	"sql.database": "postgresql",
+	"sql.formatOptions": {
+		"indent": "\t",
+		"uppercase": true
+	},
+	"python.linting.enabled": false
+}
