@@ -54,9 +54,11 @@ let mapleader = "\<Space>"
 map <Leader> <Plug>(easymotion-prefix)
 
 " calendar--
-source ~/.cache/calendar.vim/credentials.vim
-let g:calendar_google_calendar = 1
-" let g:calendar_google_task = 1
+if getftype("~/.cache/calendar.vim/credentials.vim") != ""
+  source ~/.cache/calendar.vim/credentials.vim
+  let g:calendar_google_calendar = 1
+  " let g:calendar_google_task = 1
+endif
 " --calendar
 
 " wilder--
