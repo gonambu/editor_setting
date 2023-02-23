@@ -1,23 +1,68 @@
 {
-	"yank.highlight.enable": false,
-	"languageserver": {
-		"golang": {
-			"command": "gopls",
-			"rootPatterns": ["go.mod", ".vim/", ".git/", ".hg/"],
-			"filetypes": ["go"],
-			"initializationOptions": {
-				"usePlaceholders": true
-			}
-		}
-	},
-	"jest.customFlags": ["maxWorkers=1"],
-	"snippets.extends": {
-		"typescriptreact": ["typescript"]
-	},
-	"sql.database": "postgresql",
-	"sql.formatOptions": {
-		"indent": "\t",
-		"uppercase": true
-	},
-	"python.linting.enabled": false
+  "eslint.autoFixOnSave": true,
+  "coc.preferences.formatOnSave": true,
+  "prettier.ignorePath": ".prettierignore.husky",
+  "html.filetypes": ["html", "handlebars", "htmldjango", "blade", "hbs"],
+  "html.format.indentHandlebars": true,
+  "tsserver.log": "verbose",
+  "tsserver.trace.server": "verbose",
+  "languageserver": {
+    "terraform": {
+      "command": "terraform-ls",
+      "args": ["serve"],
+      "filetypes": ["terraform", "tf"],
+      "initializationOptions": {},
+      "settings": {}
+    }
+  },
+  "diagnostic-languageserver.trace.server": "verbose",
+  "diagnostic-languageserver.filetypes": {
+    "python": ["flake8"]
+  },
+  "diagnostic-languageserver.linters": {
+    "flake8": {
+      "sourceName": "flake8",
+      "command": "flake8",
+      "debounce": 200,
+      "rootPatterns": [".git", "pyproject.toml", "setup.py"],
+      "args": [
+        "--ignore=E203,E501,F811,W503,E741,PIE",
+        "--format=%(row)d,%(col)d,%(code).1s,%(code)s: %(text)s",
+        "-"
+      ],
+      "offsetLine": 0,
+      "offsetColumn": 0,
+      "formatLines": 1,
+      "formatPattern": [
+        "(\\d+),(\\d+),([A-Z]),(.*)(\\r|\\n)*$",
+        {
+          "line": 1,
+          "column": 2,
+          "security": 3,
+          "message": 4
+        }
+      ],
+      "securities": {
+        "W": "info",
+        "E": "warning",
+        "F": "info",
+        "C": "info",
+        "N": "hint"
+      }
+    }
+  },
+  "diagnostic-languageserver.formatFiletypes": {
+    "python": ["black", "isort"]
+  },
+  "diagnostic-languageserver.formatters": {
+    "black": {
+      "command": "black",
+      "args": ["-q", "-"]
+    },
+    "isort": {
+      "command": "isort",
+      "args": ["-q", "-"]
+    }
+  },
+  "snippets.ultisnips.pythonPrompt": false
 }
