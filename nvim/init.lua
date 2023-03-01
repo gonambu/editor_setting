@@ -15,14 +15,7 @@ require('packer').startup(function(use)
   }
   use 'machakann/vim-sandwich'
   use 'tpope/vim-commentary'
-  use {
-      'folke/tokyonight.nvim',
-      config = function ()
-          require("tokyonight").setup({
-              style = "night"
-          })
-      end
-  }
+  use { "ellisonleao/gruvbox.nvim" }
   use { "L3MON4D3/LuaSnip" }
   use {
       "hrsh7th/nvim-cmp",
@@ -58,7 +51,7 @@ require('packer').startup(function(use)
       config = function()
           require('lualine').setup({
               options = {
-                  theme = 'tokyonight'
+                  theme = 'gruvbox'
               }
           })
       end
@@ -162,10 +155,6 @@ require('packer').startup(function(use)
   }
 end)
 
-require("tokyonight").setup({
-    style = "night"
-})
-
 require("mason").setup()
 require("mason-lspconfig").setup()
 
@@ -247,8 +236,8 @@ vim.keymap.set('n', '<Leader>ca', vim.lsp.buf.code_action, bufopts)
 vim.keymap.set('n', '<Leader>rf', vim.lsp.buf.references, bufopts)
 vim.keymap.set('n', '<Leader>fmt', function() vim.lsp.buf.format { async = true } end, bufopts)
 
-
-vim.cmd("colorscheme tokyonight")
+vim.o.background = "dark"
+vim.cmd([[colorscheme gruvbox]])
 
 require("disable_default_plugin")
 require("keymaps")
