@@ -24,13 +24,6 @@ local keymap = {
     {"n", "<C-l>", "<C-w>l", {noremap=true, silent=true}},
     {"n", "<C-j>", "<C-w>j", {noremap=true, silent=true}},
     {"n", "<C-k>", "<C-w>k", {noremap=true, silent=true}},
-
-    -- coc
-    -- {"n", "<leader>rn", "<Plug>(coc-rename)", {silent=true}},
-    -- {"n", "<leader>rf", "<Plug>(coc-references)", {silent=true}},
-    -- {"n", "<leader>df", ":<C-u>call CocActionAsync('jumpDefinition', CocJumpAction())<CR>", {noremap=true, silent=true}},
-    -- {"n", "<leader>td", "<Plug>(coc-type-definition)<CR>", {noremap=true, silent=true}},
-    -- {"n", "<leader>v", ":<C-u>call CocAction('doHover')<cr>", {silent=true}},
 }
 
 for _, v in pairs(keymap) do

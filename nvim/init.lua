@@ -70,7 +70,6 @@ require('packer').startup(function(use)
                   }),
                   null_ls.builtins.formatting.prettier,
               },
-              -- you can reuse a shared lspconfig on_attach callback here
               on_attach = function(client, bufnr)
                   if client.supports_method("textDocument/formatting") then
                       vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
@@ -114,7 +113,6 @@ require('packer').startup(function(use)
     event = {"BufRead"},
     config = function()
       require'nvim-treesitter.configs'.setup {
-        -- ensure_installed = { "typescript", "python", "scss", "json", "css", "markdown", "vim", "lua" },
         ensure_installed = {},
         highlight = { enable = true }
       }
@@ -216,7 +214,7 @@ require('mason-lspconfig').setup_handlers {
           }
       }
   end,
-  ["tsserver"]=function ()
+  ["tsserver"] = function ()
       lspconfig.tsserver.setup {
           on_attach = function (client, bufnr)
               client.server_capabilities.documentFormattingProvider = false
