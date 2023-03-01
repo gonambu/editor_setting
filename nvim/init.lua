@@ -15,7 +15,30 @@ require('packer').startup(function(use)
   }
   use 'machakann/vim-sandwich'
   use 'tpope/vim-commentary'
-  use {'neoclide/coc.nvim', branch = 'release'}
+  use {
+      'folke/tokyonight.nvim',
+      config = function ()
+          require("tokyonight").setup({
+              style = "night"
+          })
+      end
+  }
+  use { "L3MON4D3/LuaSnip" }
+  use {
+      "hrsh7th/nvim-cmp",
+      requires = {
+          "hrsh7th/cmp-buffer",
+          "hrsh7th/cmp-nvim-lsp",
+          "hrsh7th/cmp-path",
+          "hrsh7th/cmp-cmdline",
+          "saadparwaiz1/cmp_luasnip",
+      }
+  }
+  use {
+      "williamboman/mason.nvim",
+      "williamboman/mason-lspconfig.nvim",
+      "neovim/nvim-lspconfig",
+  }
   use {
       'tyru/open-browser.vim',
       config = function()
@@ -30,10 +53,48 @@ require('packer').startup(function(use)
       requires = {{'tyru/open-browser.vim'}},
       after = 'open-browser.vim'
   }
-  use {'nvim-lualine/lualine.nvim', config = function() require('lualine').setup() end}
-  use 'glidenote/memolist.vim'
   use {
-      'nvim-telescope/telescope.nvim', tag = '0.1.1',
+      'nvim-lualine/lualine.nvim',
+      config = function()
+          require('lualine').setup({
+              options = {
+                  theme = 'tokyonight'
+              }
+          })
+      end
+  }
+  use 'glidenote/memolist.vim'
+  use({
+    "jose-elias-alvarez/null-ls.nvim",
+    requires = { "nvim-lua/plenary.nvim" },
+    config = function ()
+          local null_ls = require("null-ls")
+          local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
+          null_ls.setup({
+              sources = {
+                  null_ls.builtins.diagnostics.eslint.with({
+                      prefer_local = "node_modules/.bin", --プロジェクトローカルがある場合はそれを利用
+                  }),
+                  null_ls.builtins.formatting.prettier,
+              },
+              -- you can reuse a shared lspconfig on_attach callback here
+              on_attach = function(client, bufnr)
+                  if client.supports_method("textDocument/formatting") then
+                      vim.api.nvim_clear_autocmds({ group = augroup, buffer = bufnr })
+                      vim.api.nvim_create_autocmd("BufWritePre", {
+                          group = augroup,
+                          buffer = bufnr,
+                          callback = function()
+                              vim.lsp.buf.format({bufnr = bufnr})
+                          end,
+                      })
+                  end
+              end,
+          })
+      end
+  })
+  use {
+      "nvim-telescope/telescope.nvim", tag = '0.1.1',
       requires = { {'nvim-lua/plenary.nvim'} },
       config = function()
           local actions = require("telescope.actions")
@@ -45,6 +106,7 @@ require('packer').startup(function(use)
                           ["<esc>"] = actions.close
                       },
                   },
+                  file_ignore_patterns = { "node_modules" }
               },
               pickers = {
               },
@@ -94,138 +156,102 @@ require('packer').startup(function(use)
           "rcarriga/nvim-notify",
       }
   })
+  use {
+      "windwp/nvim-autopairs",
+      config = function() require("nvim-autopairs").setup {} end
+  }
 end)
 
-vim.g.loaded_2html_plugin       = 1
-vim.g.loaded_gzip               = 1
-vim.g.loaded_tar                = 1
-vim.g.loaded_tarPlugin          = 1
-vim.g.loaded_zip                = 1
-vim.g.loaded_zipPlugin          = 1
-vim.g.loaded_vimball            = 1
-vim.g.loaded_vimballPlugin      = 1
-vim.g.loaded_netrw              = 1
-vim.g.loaded_netrwPlugin        = 1
-vim.g.loaded_netrwSettings      = 1
-vim.g.loaded_netrwFileHandlers  = 1
-vim.g.loaded_getscript          = 1
-vim.g.loaded_getscriptPlugin    = 1
-vim.g.loaded_man                = 1
-vim.g.loaded_matchit            = 1
-vim.g.loaded_matchparen         = 1
-vim.g.loaded_shada_plugin       = 1
-vim.g.loaded_spellfile_plugin   = 1
-vim.g.loaded_tutor_mode_plugin  = 1
-vim.g.loaded_remote_plugins     = 1
-vim.g.did_install_default_menus = 1
-vim.g.did_install_syntax_menu   = 1
-vim.g.skip_loading_mswin        = 1
-vim.g.did_indent_on             = 1
-vim.g.did_load_ftplugin         = 1
-vim.g.loaded_rrhelper           = 1
+require("tokyonight").setup({
+    style = "night"
+})
 
-vim.cmd("colorscheme hybrid")
+require("mason").setup()
+require("mason-lspconfig").setup()
 
-vim.cmd([[
-    function! ChoseAction(actions) abort
-    echo join(map(copy(a:actions), { _, v -> v.text }), ", ") .. ": "
-    let result = getcharstr()
-    let result = filter(a:actions, { _, v -> v.text =~# printf(".*\(%s\).*", result)})
-    return len(result) ? result[0].value : ""
-    endfunction
+local cmp = require("cmp")
+cmp.setup({
+    snippet = {
+        expand = function(args)
+            require'luasnip'.lsp_expand(args.body)
+        end
+    },
+    sources = {
+        {name = 'nvim_lsp'},
+        {name = 'path'},
+        {name = 'buffer'},
+        {name = 'cmdline'},
+        {name = 'luasnip'},
+    },
+    mapping = cmp.mapping.preset.insert({
+        ["<Up>"] = cmp.mapping.select_prev_item(),
+        ["<Down>"] = cmp.mapping.select_next_item(),
+        ['<C-l>'] = cmp.mapping.complete(),
+        ['<C-e>'] = cmp.mapping.abort(),
+        ["<CR>"] = cmp.mapping.confirm { select = true },
+    }),
+})
 
-    function! CocJumpAction() abort
-    let actions = [
-            \ {"text": "(s)plit", "value": "split"},
-            \ {"text": "(v)slit", "value": "vsplit"},
-            \ {"text": "(t)ab", "value": "tabedit"},
-            \ ]
-    return ChoseAction(actions)
-    endfunction
-]])
+cmp.setup.cmdline({ '/', '?' }, {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = {
+        { name = 'buffer' }
+    }
+})
 
-vim.cmd([[
-    inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm() : "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
-]])
+cmp.setup.cmdline(':', {
+    mapping = cmp.mapping.preset.cmdline(),
+    sources = cmp.config.sources({
+        { name = 'path' }
+    }, {
+        { name = 'cmdline' }
+    })
+})
 
-
-local keymap = {
-    {"n", "j", "gj", {noremap=true}},
-    {"n", "k", "gk", {noremap=true}},
-    {"n", "+", "<C-a>", {noremap=true}},
-    {"n", "-", "<C-x>", {noremap=true}},
-    {"", "<S-h>", "^", {noremap=true}},
-    {"", "<S-l>", "$", {noremap=true}},
-    {"n", "s", "<Nop>", {}},
-    {"x", "s", "<Nop>", {}},
-    {"n", "<Esc><Esc>", ":nohlsearch<CR><Esc>", {noremap=true, silent=true}},
-
-    -- tab
-    {"n", "<Space>t", ":tabnew<CR>", {noremap=true, silent=true}},
-    {"n", "<Space>h", ":tabprevious<CR>", {noremap=true, silent=true}},
-    {"n", "<Space>l", ":tabnext<CR>", {noremap=true, silent=true}},
-
-    -- telescope
-    {"n", "<Space><Space>f", "<cmd>Telescope find_files<cr>", {noremap=true, silent=true}},
-    {"n", "<Space><Space>b", "<cmd>Telescope buffers<cr>", {noremap=true, silent=true}},
-    {"n", "<leader>g", "<cmd>Telescope live_grep<cr>", {noremap=true, silent=true}},
-
-    -- window移動
-    {"n", "<C-h>", "<C-w>h", {noremap=true, silent=true}},
-    {"n", "<C-l>", "<C-w>l", {noremap=true, silent=true}},
-    {"n", "<C-j>", "<C-w>j", {noremap=true, silent=true}},
-    {"n", "<C-k>", "<C-w>k", {noremap=true, silent=true}},
-
-    -- coc
-    {"n", "<leader>rn", "<Plug>(coc-rename)", {silent=true}},
-    {"n", "<leader>rf", "<Plug>(coc-references)", {silent=true}},
-    {"n", "<leader>df", ":<C-u>call CocActionAsync('jumpDefinition', CocJumpAction())<CR>", {noremap=true, silent=true}},
-    {"n", "<leader>td", "<Plug>(coc-type-definition)<CR>", {noremap=true, silent=true}},
-    {"n", "<leader>v", ":<C-u>call CocAction('doHover')<cr>", {silent=true}},
+local capabilities = require('cmp_nvim_lsp').default_capabilities()
+local lspconfig = require('lspconfig')
+require('mason-lspconfig').setup_handlers {
+  function(server_name)
+    lspconfig[server_name].setup {
+      capabilities = capabilities,
+    }
+  end,
+  ["lua_ls"] = function ()
+      lspconfig.lua_ls.setup {
+          settings = {
+              Lua = {
+                  diagnostics = {
+                      globals = { "vim" }
+                  }
+              }
+          }
+      }
+  end,
+  ["tsserver"]=function ()
+      lspconfig.tsserver.setup {
+          on_attach = function (client, bufnr)
+              client.server_capabilities.documentFormattingProvider = false
+          end
+      }
+  end
 }
 
-for k, v in pairs(keymap) do
-    vim.api.nvim_set_keymap(v[1], v[2], v[3], v[4])
-end
-
-local options = {
-    autoread=true,
-    backspace="indent,eol,start",
-    backup=false,
-    clipboard="unnamedplus",
-    encoding="utf-8",
-    expandtab=true,
-    fileencodings="utf-8,sjis,iso-2022-jp,euc-jp",
-    hidden=true,
-    hlsearch=true,
-    ignorecase=true,
-    incsearch=true,
-    laststatus=2,
-    matchtime=1,
-    number=true,
-    scrolloff=9999,
-    shiftround=true,
-    shiftwidth=4,
-    showcmd=true,
-    showmatch=true,
-    smartcase=true,
-    smartindent=true,
-    splitright=true,
-    swapfile=false,
-    virtualedit="onemore",
-    visualbell=true,
-    wildmenu=true,
-    wildmode="list:longest",
-    wrapscan=true,
-    list=true,
-    listchars={tab="▸-"},
-}
-
-for k, v in pairs(options) do
-    vim.opt[k] = v
-end
+local bufopts = { noremap=true, silent=true }
+vim.keymap.set('n', '<Leader>df', function ()
+    vim.lsp.buf.definition()
+    vim.api.nvim_command('tabnew')
+end, bufopts)
+vim.keymap.set('n', '<Leader>v', vim.lsp.buf.hover, bufopts)
+vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, bufopts)
+vim.keymap.set('n', '<Leader>ca', vim.lsp.buf.code_action, bufopts)
+vim.keymap.set('n', '<Leader>rf', vim.lsp.buf.references, bufopts)
+vim.keymap.set('n', '<Leader>fmt', function() vim.lsp.buf.format { async = true } end, bufopts)
 
 
-vim.api.nvim_create_user_command("Format", ":call CocActionAsync('format')", { nargs = 0 })
-vim.api.nvim_create_user_command("Prettier", ":CocCommand prettier.forceFormatDocument", { nargs = 0 })
+vim.cmd("colorscheme tokyonight")
+
+require("disable_default_plugin")
+require("keymaps")
+require("options")
+
 vim.api.nvim_create_user_command("FilePath", ":echo expand('%')", { nargs = 0 })

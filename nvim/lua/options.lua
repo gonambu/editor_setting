@@ -1,0 +1,36 @@
+local options = {
+    autoread=true,
+    backspace="indent,eol,start",
+    backup=false,
+    clipboard="unnamedplus",
+    encoding="utf-8",
+    expandtab=true,
+    fileencodings="utf-8,sjis,iso-2022-jp,euc-jp",
+    hidden=true,
+    hlsearch=true,
+    ignorecase=true,
+    incsearch=true,
+    laststatus=2,
+    matchtime=1,
+    number=true,
+    scrolloff=9999,
+    shiftround=true,
+    shiftwidth=4,
+    showcmd=true,
+    showmatch=true,
+    smartcase=true,
+    smartindent=true,
+    splitright=true,
+    swapfile=false,
+    virtualedit="onemore",
+    visualbell=true,
+    wildmenu=true,
+    wildmode="list:longest",
+    wrapscan=true,
+    list=true,
+    listchars={tab="▸-"},
+}
+
+for k, v in pairs(options) do
+    vim.opt[k] = v
+end
