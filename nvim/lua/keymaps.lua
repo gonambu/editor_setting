@@ -15,7 +15,7 @@ local keymap = {
     {"n", "<Space>l", ":tabnext<CR>", {noremap=true, silent=true}},
 
     -- telescope
-    {"n", "<Space><Space>f", "<cmd>Telescope find_files<cr>", {noremap=true, silent=true}},
+    {"n", "<Space><Space>f", "<cmd>Telescope find_files hidden=true<cr>", {noremap=true, silent=true}},
     {"n", "<Space><Space>b", "<cmd>Telescope buffers<cr>", {noremap=true, silent=true}},
     {"n", "<leader>g", "<cmd>Telescope live_grep<cr>", {noremap=true, silent=true}},
 
