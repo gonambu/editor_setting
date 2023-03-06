@@ -29,6 +29,7 @@ local options = {
     wrapscan=true,
     list=true,
     listchars={tab="▸-"},
+    termguicolors=true,
 }
 
 for k, v in pairs(options) do
