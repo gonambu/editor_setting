@@ -64,9 +64,10 @@ require('packer').startup(function(use)
           local null_ls = require("null-ls")
           local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
           null_ls.setup({
+              debug = true,
               sources = {
-                  null_ls.builtins.diagnostics.eslint.with({
-                      prefer_local = "node_modules/.bin", --プロジェクトローカルがある場合はそれを利用
+                  null_ls.builtins.diagnostics.eslint_d.with({
+                      -- prefer_local = "node_modules/.bin", --プロジェクトローカルがある場合はそれを利用
                   }),
                   null_ls.builtins.formatting.prettier,
               },
@@ -150,6 +151,12 @@ require('packer').startup(function(use)
   use {
       "windwp/nvim-autopairs",
       config = function() require("nvim-autopairs").setup {} end
+  }
+  use {
+      'lewis6991/gitsigns.nvim',
+      config = function()
+          require('gitsigns').setup()
+      end
   }
 end)
 
