@@ -129,7 +129,7 @@ require("lazy").setup({
     dependencies = { "mason.nvim" },
     config = function()
       require("mason-lspconfig").setup({
-        ensure_installed = { "lua_ls", "tsserver" },
+        ensure_installed = { "lua_ls", "tsserver", "kotlin_language_server" },
         handlers = {
           function(server_name)
             require('lspconfig')[server_name].setup({
@@ -156,6 +156,21 @@ require("lazy").setup({
               on_attach = function (client, bufnr)
                 client.server_capabilities.documentFormattingProvider = false
               end
+            }
+          end,
+          
+          ["kotlin_language_server"] = function ()
+            require('lspconfig').kotlin_language_server.setup {
+              capabilities = require('cmp_nvim_lsp').default_capabilities(),
+              settings = {
+                kotlin = {
+                  compiler = {
+                    jvm = {
+                      target = "17"
+                    }
+                  }
+                }
+              }
             }
           end
         }
