@@ -58,18 +58,17 @@ require('packer').startup(function(use)
   }
   use 'glidenote/memolist.vim'
   use({
-    "jose-elias-alvarez/null-ls.nvim",
+   "nvimtools/none-ls.nvim",
     requires = { "nvim-lua/plenary.nvim" },
     config = function ()
-          local null_ls = require("null-ls")
+          local null_ls = require("none-ls")
           local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
           null_ls.setup({
               debug = true,
               sources = {
-                  null_ls.builtins.diagnostics.eslint_d.with({
-                      -- prefer_local = "node_modules/.bin", --プロジェクトローカルがある場合はそれを利用
-                  }),
-                  null_ls.builtins.formatting.prettier,
+                  none_ls.builtins.diagnostics.eslint_d,
+                  none_ls.builtins.formatting.prettier,
+                  none_ls.builtins.diagnostics.ktlint,
               },
               on_attach = function(client, bufnr)
                   if client.supports_method("textDocument/formatting") then
@@ -78,7 +77,7 @@ require('packer').startup(function(use)
                           group = augroup,
                           buffer = bufnr,
                           callback = function()
-                              vim.lsp.buf.format({bufnr = bufnr, timeout_ms = 5000})
+                              vim.lsp.buf.format({ async = true, bufnr = bufnr, timeout_ms = 5000 })
                           end,
                       })
                   end
@@ -161,7 +160,6 @@ require('packer').startup(function(use)
 end)
 
 require("mason").setup()
-require("mason-lspconfig").setup()
 
 local cmp = require("cmp")
 cmp.setup({
@@ -204,31 +202,47 @@ cmp.setup.cmdline(':', {
 
 local capabilities = require('cmp_nvim_lsp').default_capabilities()
 local lspconfig = require('lspconfig')
-require('mason-lspconfig').setup_handlers {
-  function(server_name)
-    lspconfig[server_name].setup {
-      capabilities = capabilities,
+require("mason-lspconfig").setup({
+    -- インストールしたいLSPサーバーのリスト。
+    -- (例: "tsserver", "eslint", "gopls" など)
+    -- 不要な場合はこの行ごと削除してもOKです。
+    ensure_installed = { "lua_ls", "tsserver" },
+
+    -- LSPサーバーごとの設定
+    handlers = {
+        -- デフォルトのハンドラ。ここに記述した内容が全てのLSPサーバーに適用されます。
+        function(server_name)
+            require('lspconfig')[server_name].setup({
+                capabilities = require('cmp_nvim_lsp').default_capabilities()
+            })
+        end,
+
+        -- 以下は特定のLSPサーバーに対する個別の設定
+        ["lua_ls"] = function ()
+            require('lspconfig').lua_ls.setup {
+                capabilities = require('cmp_nvim_lsp').default_capabilities(),
+                settings = {
+                    Lua = {
+                        diagnostics = {
+                            globals = { "vim" }
+                        }
+                    }
+                }
+            }
+        end,
+        
+        -- 元の設定で "ts_ls" を使っていましたが、"tsserver" の方が一般的です。
+        ["tsserver"] = function ()
+            require('lspconfig').tsserver.setup {
+                capabilities = require('cmp_nvim_lsp').default_capabilities(),
+                -- 元の設定にあった「フォーマット機能を無効化する」設定を引き継ぎ
+                on_attach = function (client, bufnr)
+                    client.server_capabilities.documentFormattingProvider = false
+                end
+            }
+        end
     }
-  end,
-  ["lua_ls"] = function ()
-      lspconfig.lua_ls.setup {
-          settings = {
-              Lua = {
-                  diagnostics = {
-                      globals = { "vim" }
-                  }
-              }
-          }
-      }
-  end,
-  ["tsserver"] = function ()
-      lspconfig.tsserver.setup {
-          on_attach = function (client, bufnr)
-              client.server_capabilities.documentFormattingProvider = false
-          end
-      }
-  end
-}
+})
 
 local bufopts = { noremap=true, silent=true }
 vim.keymap.set('n', '<Leader>df', function ()
