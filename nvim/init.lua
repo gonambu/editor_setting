@@ -51,7 +51,12 @@ require("lazy").setup({
           "nvim-lua/plenary.nvim", -- Required for git operations
       },
       config = function()
-          require("claude-code").setup()
+          require("claude-code").setup({
+              window = {
+                  position = "vertical",
+                  split_ratio = 0.3,
+              }
+          })
       end
   },
   {
@@ -181,6 +186,25 @@ require("lazy").setup({
   "neovim/nvim-lspconfig",
 
   {
+    "jay-babu/mason-null-ls.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    dependencies = {
+      "williamboman/mason.nvim",
+      "nvimtools/none-ls.nvim",
+    },
+    config = function()
+      require("mason-null-ls").setup({
+        ensure_installed = {
+          "prettier", -- prettier formatter
+          "ktlint",   -- kotlin linter/formatter
+          "eslint_d", -- eslint daemon
+        },
+        automatic_installation = true,
+      })
+    end,
+  },
+
+  {
     'tyru/open-browser.vim',
     keys = {
       { "<Leader>b", "<Plug>(openbrowser-smart-search)", mode = {"n", "x"}, desc = "Open browser search" }
@@ -212,7 +236,7 @@ require("lazy").setup({
     dependencies = { 
       "nvim-lua/plenary.nvim",
       "neovim/nvim-lspconfig",
-      "williamboman/mason-lspconfig.nvim"
+      "williamboman/mason-lspconfig.nvim",
     },
     event = { "BufReadPost", "BufNewFile" },
     config = function()
@@ -222,9 +246,10 @@ require("lazy").setup({
       null_ls.setup({
         debug = true,
         sources = {
-          null_ls.builtins.diagnostics.eslint_d,
+          null_ls.builtins.diagnostics.eslint,
           null_ls.builtins.formatting.prettier,
           null_ls.builtins.diagnostics.ktlint,
+          null_ls.builtins.formatting.ktlint,  -- Add ktlint formatter
         },
         on_attach = function(client, bufnr)
           if client.supports_method("textDocument/formatting") then

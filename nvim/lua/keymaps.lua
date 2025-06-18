@@ -8,7 +8,7 @@ local keymap = {
     {"n", "s", "<Nop>", {}},
     {"x", "s", "<Nop>", {}},
     {"n", "<Esc><Esc>", ":nohlsearch<CR><Esc>", {noremap=true, silent=true}},
-    {"n", "<leader>cc", "<cmd>ClaudeCode<CR>", {noremap=true, silent=true}},
+    {"n", "<leader><leader>c", "<cmd>ClaudeCode<CR>", {noremap=true, silent=true}},
 
     -- tab
     {"n", "<Space>t", ":tabnew<CR>", {noremap=true, silent=true}},
