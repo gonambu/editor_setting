@@ -169,11 +169,12 @@ require("lazy").setup({
     "nvimtools/none-ls.nvim",
     dependencies = { 
       "nvim-lua/plenary.nvim",
-      "neovim/nvim-lspconfig"
+      "neovim/nvim-lspconfig",
+      "williamboman/mason-lspconfig.nvim"
     },
-    event = { "BufReadPre", "BufNewFile" },
+    event = { "BufReadPost", "BufNewFile" },
     config = function()
-      local null_ls = require("none-ls")
+      local null_ls = require("null-ls")
       
       local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
       null_ls.setup({
