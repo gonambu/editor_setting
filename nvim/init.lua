@@ -28,6 +28,33 @@ require("lazy").setup({
   'tpope/vim-commentary',
 
   {
+      'kristijanhusak/vim-dadbod-ui',
+      dependencies = {
+          { 'tpope/vim-dadbod', lazy = true },
+          { 'kristijanhusak/vim-dadbod-completion', ft = { 'sql', 'mysql', 'plsql' }, lazy = true }, -- Optional
+      },
+      cmd = {
+          'DBUI',
+          'DBUIToggle',
+          'DBUIAddConnection',
+          'DBUIFindBuffer',
+      },
+      init = function()
+          -- Your DBUI configuration
+          vim.g.db_ui_use_nerd_fonts = 1
+      end,
+  },
+
+  {
+      "greggh/claude-code.nvim",
+      dependencies = {
+          "nvim-lua/plenary.nvim", -- Required for git operations
+      },
+      config = function()
+          require("claude-code").setup()
+      end
+  },
+  {
     "ellisonleao/gruvbox.nvim",
     priority = 1000,
     config = function()
