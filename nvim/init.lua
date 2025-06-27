@@ -136,7 +136,7 @@ require("lazy").setup({
       require("mason-lspconfig").setup({
         ensure_installed = { 
           "lua_ls", 
-          "tsserver"
+          "ts_ls"  -- mason-lspconfigでのTypeScript LSPの名前
         },
         handlers = {
           function(server_name)
@@ -158,8 +158,8 @@ require("lazy").setup({
             }
           end,
           
-          ["tsserver"] = function ()
-            require('lspconfig').tsserver.setup {
+          ["ts_ls"] = function ()
+            require('lspconfig').ts_ls.setup {
               capabilities = require('cmp_nvim_lsp').default_capabilities(),
               on_attach = function (client, bufnr)
                 client.server_capabilities.documentFormattingProvider = false
@@ -339,9 +339,65 @@ require("lazy").setup({
 })
 
 local bufopts = { noremap=true, silent=true }
-vim.keymap.set('n', '<Leader>df', function ()
-  vim.lsp.buf.definition()
-  vim.api.nvim_command('tabnew')
+vim.keymap.set('n', '<Leader>df', function()
+  -- 現在のファイル情報を保存
+  local current_buf = vim.api.nvim_get_current_buf()
+  local current_file = vim.api.nvim_buf_get_name(current_buf)
+  local current_pos = vim.api.nvim_win_get_cursor(0)
+  
+  -- 定義位置を取得
+  vim.lsp.buf_request(0, 'textDocument/definition', vim.lsp.util.make_position_params(), function(err, result, ctx, config)
+    if err then
+      vim.notify('Error: ' .. err.message, vim.log.levels.ERROR)
+      return
+    end
+    
+    if not result or vim.tbl_isempty(result) then
+      vim.notify('No definition found', vim.log.levels.INFO)
+      return
+    end
+    
+    -- 結果を正規化（単一の結果でも配列として扱う）
+    if not vim.tbl_islist(result) then
+      result = { result }
+    end
+    
+    local location = result[1]
+    local target_uri = location.uri or location.targetUri
+    local target_range = location.range or location.targetRange
+    
+    if not target_uri then
+      return
+    end
+    
+    local target_file = vim.uri_to_fname(target_uri)
+    
+    -- 同一ファイルかどうかチェック
+    if target_file == current_file then
+      -- 同一ファイル内でジャンプ
+      if target_range then
+        local row = target_range.start.line + 1
+        local col = target_range.start.character + 1
+        -- ジャンプリストに追加
+        vim.cmd("normal! m'")
+        vim.api.nvim_win_set_cursor(0, {row, col})
+      end
+    else
+      -- 別ファイルなら新しいタブで開く
+      vim.cmd('tabnew')
+      vim.cmd('edit ' .. vim.fn.fnameescape(target_file))
+      
+      -- カーソル位置を設定
+      if target_range then
+        local row = target_range.start.line + 1
+        local col = target_range.start.character + 1
+        vim.api.nvim_win_set_cursor(0, {row, col})
+      end
+      
+      -- ジャンプリストに追加（元の位置に戻れるように）
+      vim.cmd("normal! m'")
+    end
+  end)
 end, bufopts)
 vim.keymap.set('n', '<Leader>v', vim.lsp.buf.hover, bufopts)
 vim.keymap.set('n', '<Leader>rn', vim.lsp.buf.rename, bufopts)
