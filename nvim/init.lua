@@ -234,7 +234,7 @@ require("lazy").setup({
       null_ls.setup({
         debug = true,
         sources = {
-          null_ls.builtins.diagnostics.eslint,
+          require("none-ls.diagnostics.eslint"),
           null_ls.builtins.formatting.prettier,
           null_ls.builtins.diagnostics.ktlint,
           null_ls.builtins.formatting.ktlint,  -- Add ktlint formatter
@@ -253,6 +253,13 @@ require("lazy").setup({
         end,
       })
     end
+  },
+
+  {
+    "nvimtools/none-ls.nvim",
+    dependencies = {
+      "nvimtools/none-ls-extras.nvim",
+    },
   },
 
   {
