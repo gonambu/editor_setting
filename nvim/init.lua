@@ -136,7 +136,9 @@ require("lazy").setup({
       require("mason-lspconfig").setup({
         ensure_installed = { 
           "lua_ls", 
-          "ts_ls"  -- mason-lspconfigでのTypeScript LSPの名前
+          "ts_ls",  -- mason-lspconfigでのTypeScript LSPの名前
+          "terraformls",  -- Terraform Language Server
+          "rust_analyzer"  -- Rust Language Server
         },
         handlers = {
           function(server_name)
@@ -163,6 +165,22 @@ require("lazy").setup({
               capabilities = require('cmp_nvim_lsp').default_capabilities(),
               on_attach = function (client, bufnr)
                 client.server_capabilities.documentFormattingProvider = false
+              end
+            }
+          end,
+          
+          ["rust_analyzer"] = function ()
+            require('lspconfig').rust_analyzer.setup {
+              capabilities = require('cmp_nvim_lsp').default_capabilities(),
+              root_dir = function(fname)
+                local util = require('lspconfig').util
+                -- Cargoがインストールされていない場合のエラーを回避
+                local ok, result = pcall(util.root_pattern("Cargo.toml"), fname)
+                if ok and result then
+                  return result
+                end
+                -- フォールバック: .gitディレクトリまたは現在のディレクトリ
+                return util.root_pattern(".git")(fname) or util.path.dirname(fname)
               end
             }
           end
@@ -365,7 +383,7 @@ vim.keymap.set('n', '<Leader>df', function()
     end
     
     -- 結果を正規化（単一の結果でも配列として扱う）
-    if not vim.tbl_islist(result) then
+    if not vim.islist(result) then
       result = { result }
     end
     
@@ -413,73 +431,74 @@ vim.keymap.set('n', '<Leader>rf', vim.lsp.buf.references, bufopts)
 vim.keymap.set('n', '<Leader>fmt', function() vim.lsp.buf.format { async = true } end, bufopts)
 
 -- JetBrains Kotlin LSPの手動設定
-local lspconfig = require('lspconfig')
-local configs = require('lspconfig.configs')
-
--- カスタムLSPサーバーとして登録
-if not configs.kotlin_lsp then
-  configs.kotlin_lsp = {
-    default_config = {
-      cmd = { 'kotlin-lsp', '--stdio' }, -- stdio モードで起動
-      filetypes = { 'kotlin', 'kt' },
-      -- コンポジットビルド対応: 親プロジェクトのルートを優先的に探す
-      root_dir = function(fname)
-        local util = lspconfig.util
-        
-        -- 現在のファイルから上位に向かって探索
-        local root = util.root_pattern('settings.gradle', 'settings.gradle.kts')(fname)
-        
-        if root then
-          -- settings.gradleの内容を確認してincludeBuildがあるか調べる
-          local settings_file = root .. '/settings.gradle.kts'
-          if not vim.fn.filereadable(settings_file) then
-            settings_file = root .. '/settings.gradle'
-          end
-          
-          -- 親ディレクトリも確認（コンポジットビルドの親の可能性）
-          local parent = vim.fn.fnamemodify(root, ':h')
-          local parent_settings = util.root_pattern('settings.gradle', 'settings.gradle.kts')(parent)
-          if parent_settings then
-            root = parent_settings
-          end
-        end
-        
-        return root or util.root_pattern('build.gradle', 'build.gradle.kts', 'pom.xml', '.git')(fname)
-      end,
-      settings = {},
-      init_options = {
-        storagePath = vim.fn.stdpath('cache') .. '/kotlin-lsp',
-      },
-    },
-  }
-end
-
--- LSPセットアップ（ワークスペース設定を追加）
-lspconfig.kotlin_lsp.setup {
-  capabilities = require('cmp_nvim_lsp').default_capabilities(),
-  on_attach = function(client, bufnr)
-    -- コンポジットビルドの追加フォルダを検出して登録
-    local root_dir = client.config.root_dir
-    if root_dir then
-      -- settings.gradleからincludeBuildを探す
-      local settings_files = vim.fn.glob(root_dir .. '/settings.gradle*', false, true)
-      for _, settings_file in ipairs(settings_files) do
-        local content = vim.fn.readfile(settings_file)
-        for _, line in ipairs(content) do
-          -- includeBuild ディレクティブを探す
-          local included = line:match('includeBuild%s*%(?["\']([^"\']+)["\']')
-          if included then
-            local included_path = root_dir .. '/' .. included
-            if vim.fn.isdirectory(included_path) then
-              -- ワークスペースフォルダとして追加
-              vim.lsp.buf.add_workspace_folder(included_path)
-            end
-          end
-        end
-      end
-    end
-  end,
-}
+-- NOTE: kotlin-lspが重すぎるため一時的に無効化
+-- local lspconfig = require('lspconfig')
+-- local configs = require('lspconfig.configs')
+-- 
+-- -- カスタムLSPサーバーとして登録
+-- if not configs.kotlin_lsp then
+--   configs.kotlin_lsp = {
+--     default_config = {
+--       cmd = { 'kotlin-lsp', '--stdio' }, -- stdio モードで起動
+--       filetypes = { 'kotlin', 'kt' },
+--       -- コンポジットビルド対応: 親プロジェクトのルートを優先的に探す
+--       root_dir = function(fname)
+--         local util = lspconfig.util
+--         
+--         -- 現在のファイルから上位に向かって探索
+--         local root = util.root_pattern('settings.gradle', 'settings.gradle.kts')(fname)
+--         
+--         if root then
+--           -- settings.gradleの内容を確認してincludeBuildがあるか調べる
+--           local settings_file = root .. '/settings.gradle.kts'
+--           if not vim.fn.filereadable(settings_file) then
+--             settings_file = root .. '/settings.gradle'
+--           end
+--           
+--           -- 親ディレクトリも確認（コンポジットビルドの親の可能性）
+--           local parent = vim.fn.fnamemodify(root, ':h')
+--           local parent_settings = util.root_pattern('settings.gradle', 'settings.gradle.kts')(parent)
+--           if parent_settings then
+--             root = parent_settings
+--           end
+--         end
+--         
+--         return root or util.root_pattern('build.gradle', 'build.gradle.kts', 'pom.xml', '.git')(fname)
+--       end,
+--       settings = {},
+--       init_options = {
+--         storagePath = vim.fn.stdpath('cache') .. '/kotlin-lsp',
+--       },
+--     },
+--   }
+-- end
+-- 
+-- -- LSPセットアップ（ワークスペース設定を追加）
+-- lspconfig.kotlin_lsp.setup {
+--   capabilities = require('cmp_nvim_lsp').default_capabilities(),
+--   on_attach = function(client, bufnr)
+--     -- コンポジットビルドの追加フォルダを検出して登録
+--     local root_dir = client.config.root_dir
+--     if root_dir then
+--       -- settings.gradleからincludeBuildを探す
+--       local settings_files = vim.fn.glob(root_dir .. '/settings.gradle*', false, true)
+--       for _, settings_file in ipairs(settings_files) do
+--         local content = vim.fn.readfile(settings_file)
+--         for _, line in ipairs(content) do
+--           -- includeBuild ディレクティブを探す
+--           local included = line:match('includeBuild%s*%(?["\']([^"\']+)["\']')
+--           if included then
+--             local included_path = root_dir .. '/' .. included
+--             if vim.fn.isdirectory(included_path) then
+--               -- ワークスペースフォルダとして追加
+--               vim.lsp.buf.add_workspace_folder(included_path)
+--             end
+--           end
+--         end
+--       end
+--     end
+--   end,
+-- }
 
 require("disable_default_plugin")
 require("keymaps")
