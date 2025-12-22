@@ -83,18 +83,23 @@ require("lazy").setup({
     config = function()
       local cmp = require("cmp")
       cmp.setup({
+        performance = {
+          debounce = 60,
+          throttle = 30,
+          max_view_entries = 200,
+        },
         snippet = {
           expand = function(args)
             require'luasnip'.lsp_expand(args.body)
           end
         },
-        sources = {
+        sources = cmp.config.sources({
           {name = 'nvim_lsp'},
-          {name = 'path'},
-          {name = 'buffer'},
-          {name = 'cmdline'},
           {name = 'luasnip'},
-        },
+          {name = 'path'},
+        }, {
+          {name = 'buffer', keyword_length = 3},
+        }),
         mapping = cmp.mapping.preset.insert({
           ["<Up>"] = cmp.mapping.select_prev_item(),
           ["<Down>"] = cmp.mapping.select_next_item(),
@@ -131,6 +136,7 @@ require("lazy").setup({
 
   {
     "williamboman/mason-lspconfig.nvim",
+    event = "VeryLazy",
     dependencies = { "mason.nvim" },
     config = function()
       require("mason-lspconfig").setup({
@@ -187,12 +193,21 @@ require("lazy").setup({
                   cargo = {
                     buildScripts = {
                       enable = true,
-                      rebuildOnSave = false,  -- 保存時に再ビルドしない
+                      rebuildOnSave = false,
                     },
                   },
-                  checkOnSave = false,  -- 保存時のcargo checkを無効化（必要なら"clippy"に変更）
+                  checkOnSave = false,
                   procMacro = {
                     enable = true,
+                  },
+                  inlayHints = {
+                    bindingModeHints = { enable = false },
+                    chainingHints = { enable = false },
+                    closingBraceHints = { enable = false },
+                    closureReturnTypeHints = { enable = "never" },
+                    lifetimeElisionHints = { enable = "never" },
+                    parameterHints = { enable = false },
+                    typeHints = { enable = false },
                   },
                 }
               }
@@ -253,23 +268,24 @@ require("lazy").setup({
 
   {
     "nvimtools/none-ls.nvim",
-    dependencies = { 
+    dependencies = {
       "nvim-lua/plenary.nvim",
       "neovim/nvim-lspconfig",
       "williamboman/mason-lspconfig.nvim",
+      "nvimtools/none-ls-extras.nvim",
     },
     event = { "BufReadPost", "BufNewFile" },
     config = function()
       local null_ls = require("null-ls")
-      
+
       local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
       null_ls.setup({
-        debug = true,
+        debug = false,  -- パフォーマンス: ログ出力を無効化
         sources = {
           require("none-ls.diagnostics.eslint"),
           null_ls.builtins.formatting.prettier,
           null_ls.builtins.diagnostics.ktlint,
-          null_ls.builtins.formatting.ktlint,  -- Add ktlint formatter
+          null_ls.builtins.formatting.ktlint,
         },
         on_attach = function(client, bufnr)
           if client.supports_method("textDocument/formatting") then
@@ -278,20 +294,13 @@ require("lazy").setup({
               group = augroup,
               buffer = bufnr,
               callback = function()
-                vim.lsp.buf.format({ async = true, bufnr = bufnr, timeout_ms = 5000 })
+                vim.lsp.buf.format({ async = false, bufnr = bufnr, timeout_ms = 5000 })
               end,
             })
           end
         end,
       })
     end
-  },
-
-  {
-    "nvimtools/none-ls.nvim",
-    dependencies = {
-      "nvimtools/none-ls-extras.nvim",
-    },
   },
 
   {
@@ -312,7 +321,28 @@ require("lazy").setup({
               ["<esc>"] = actions.close
             },
           },
-          file_ignore_patterns = { "node_modules" }
+          file_ignore_patterns = {
+            "node_modules",
+            ".git/",
+            ".gradle/",
+            "build/",
+            "dist/",
+            "target/",
+            "%.lock",
+          },
+          vimgrep_arguments = {
+            "rg",
+            "--color=never",
+            "--no-heading",
+            "--with-filename",
+            "--line-number",
+            "--column",
+            "--smart-case",
+            "--hidden",
+            "--glob=!.git/",
+            "--glob=!node_modules/",
+            "--glob=!target/",
+          },
         },
         pickers = {
         },
@@ -335,8 +365,14 @@ require("lazy").setup({
     event = { "BufReadPost", "BufNewFile" },
     config = function()
       require'nvim-treesitter.configs'.setup {
-        ensure_installed = { "rust" },
-        highlight = { enable = true }
+        ensure_installed = {
+          "rust", "lua", "typescript", "javascript",
+          "json", "yaml", "toml", "kotlin", "terraform", "sql",
+        },
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,  -- 二重処理防止
+        },
       }
     end
   },
@@ -362,10 +398,13 @@ require("lazy").setup({
           command_palette = true,
           long_message_to_split = true,
           inc_rename = false,
-          lsp_doc_border = false,
+          lsp_doc_border = true,
         },
-        messages = {
-        }
+        routes = {
+          { filter = { event = "msg_show", kind = "search_count" }, opts = { skip = true } },
+          { filter = { event = "msg_show", kind = "wmsg" }, view = "mini" },
+        },
+        throttle = 1000 / 30,
       })
     end,
   },
