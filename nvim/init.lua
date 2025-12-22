@@ -60,11 +60,11 @@ require("lazy").setup({
       end
   },
   {
-    "ellisonleao/gruvbox.nvim",
+    "folke/tokyonight.nvim",
     priority = 1000,
     config = function()
       vim.o.background = "dark"
-      vim.cmd([[colorscheme gruvbox]])
+      vim.cmd([[colorscheme tokyonight]])
     end,
   },
 
@@ -181,7 +181,21 @@ require("lazy").setup({
                 end
                 -- フォールバック: .gitディレクトリまたは現在のディレクトリ
                 return util.root_pattern(".git")(fname) or util.path.dirname(fname)
-              end
+              end,
+              settings = {
+                ["rust-analyzer"] = {
+                  cargo = {
+                    buildScripts = {
+                      enable = true,
+                      rebuildOnSave = false,  -- 保存時に再ビルドしない
+                    },
+                  },
+                  checkOnSave = false,  -- 保存時のcargo checkを無効化（必要なら"clippy"に変更）
+                  procMacro = {
+                    enable = true,
+                  },
+                }
+              }
             }
           end
       }
@@ -229,7 +243,7 @@ require("lazy").setup({
     config = function()
       require('lualine').setup({
         options = {
-          theme = 'gruvbox'
+          theme = 'tokyonight'
         }
       })
     end
@@ -281,9 +295,12 @@ require("lazy").setup({
   },
 
   {
-    "nvim-telescope/telescope.nvim", 
+    "nvim-telescope/telescope.nvim",
     tag = '0.1.8',
-    dependencies = { 'nvim-lua/plenary.nvim' },
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      { 'nvim-telescope/telescope-fzf-native.nvim', build = 'make' },
+    },
     cmd = "Telescope",
     config = function()
       local actions = require("telescope.actions")
@@ -300,8 +317,15 @@ require("lazy").setup({
         pickers = {
         },
         extensions = {
+          fzf = {
+            fuzzy = true,
+            override_generic_sorter = true,
+            override_file_sorter = true,
+            case_mode = "smart_case",
+          }
         }
       }
+      require('telescope').load_extension('fzf')
     end
   },
 
@@ -311,7 +335,7 @@ require("lazy").setup({
     event = { "BufReadPost", "BufNewFile" },
     config = function()
       require'nvim-treesitter.configs'.setup {
-        ensure_installed = {},
+        ensure_installed = { "rust" },
         highlight = { enable = true }
       }
     end
