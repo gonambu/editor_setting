@@ -10,11 +10,6 @@ local keymap = {
     {"n", "<Esc><Esc>", ":nohlsearch<CR><Esc>", {noremap=true, silent=true}},
     {"n", "<leader><leader>c", "<cmd>ClaudeCode<CR>", {noremap=true, silent=true}},
 
-    -- tab
-    {"n", "<Space>t", ":tabnew<CR>", {noremap=true, silent=true}},
-    {"n", "<Space>h", ":tabprevious<CR>", {noremap=true, silent=true}},
-    {"n", "<Space>l", ":tabnext<CR>", {noremap=true, silent=true}},
-
     -- telescope
     {"n", "<Space><Space>f", "<cmd>Telescope find_files hidden=true<cr>", {noremap=true, silent=true}},
     {"n", "<Space><Space>b", "<cmd>Telescope buffers<cr>", {noremap=true, silent=true}},
