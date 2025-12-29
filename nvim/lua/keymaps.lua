@@ -25,6 +25,12 @@ local keymap = {
     {"n", "<C-l>", "<C-w>l", {noremap=true, silent=true}},
     {"n", "<C-j>", "<C-w>j", {noremap=true, silent=true}},
     {"n", "<C-k>", "<C-w>k", {noremap=true, silent=true}},
+
+    -- ターミナルモードからのwindow移動
+    {"t", "<C-h>", "<C-\\><C-n><C-w>h", {noremap=true, silent=true}},
+    {"t", "<C-l>", "<C-\\><C-n><C-w>l", {noremap=true, silent=true}},
+    {"t", "<C-j>", "<C-\\><C-n><C-w>j", {noremap=true, silent=true}},
+    {"t", "<C-k>", "<C-\\><C-n><C-w>k", {noremap=true, silent=true}},
 }
 
 for _, v in pairs(keymap) do

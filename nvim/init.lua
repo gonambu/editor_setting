@@ -14,16 +14,6 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-  {
-    'lambdalisue/fern.vim',
-    keys = {
-      { "<Leader>n", ":Fern . -drawer -toggle<CR>", desc = "Toggle Fern file explorer" }
-    },
-    config = function()
-      vim.g["fern#default_hidden"] = 1
-    end
-  },
-
   'machakann/vim-sandwich',
   'tpope/vim-commentary',
 
@@ -46,18 +36,31 @@ require("lazy").setup({
   },
 
   {
-      "greggh/claude-code.nvim",
-      dependencies = {
-          "nvim-lua/plenary.nvim", -- Required for git operations
-      },
-      config = function()
-          require("claude-code").setup({
-              window = {
-                  position = "vertical",
-                  split_ratio = 0.3,
-              }
-          })
-      end
+    "coder/claudecode.nvim",
+    cmd = {
+      "ClaudeCode",
+      "ClaudeCodeOpen",
+      "ClaudeCodeSend",
+      "ClaudeCodeAdd",
+      "ClaudeCodeStatus",
+    },
+    config = function()
+      require("claudecode").setup({
+        terminal_cmd = vim.fn.expand("$HOME/.claude/local/claude"),
+        terminal = {
+          split_side = "right",
+          split_width_percentage = 0.3,
+        },
+      })
+    end,
+    keys = {
+      { "<C-,>", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
+      { "<Leader>ac", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
+      { "<Leader>as", "<cmd>ClaudeCodeSend<cr>", mode = "v", desc = "Send selection to Claude" },
+      { "<Leader>ao", "<cmd>ClaudeCodeOpen<cr>", desc = "Open file in Claude" },
+      { "<Leader>aa", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept Claude diff" },
+      { "<Leader>ad", "<cmd>ClaudeCodeDiffDeny<cr>", desc = "Deny Claude diff" },
+    },
   },
   {
     "folke/tokyonight.nvim",
@@ -460,6 +463,51 @@ require("lazy").setup({
     event = { "BufReadPre", "BufNewFile" },
     config = function()
       require('gitsigns').setup()
+    end
+  },
+
+  {
+    'stevearc/oil.nvim',
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    keys = {
+      { "-", "<CMD>Oil<CR>", desc = "Open parent directory" },
+      { "<Leader>n", function()
+        require("oil").toggle_float()
+      end, desc = "Toggle Oil file explorer" },
+    },
+    config = function()
+      require("oil").setup({
+        default_file_explorer = true,
+        columns = {
+          "icon",
+        },
+        view_options = {
+          show_hidden = true,
+        },
+        float = {
+          padding = 2,
+          max_width = 80,
+          max_height = 30,
+        },
+        keymaps = {
+          ["g?"] = "actions.show_help",
+          ["<CR>"] = "actions.select",
+          ["<C-v>"] = "actions.select_vsplit",
+          ["<C-s>"] = "actions.select_split",
+          ["<C-t>"] = "actions.select_tab",
+          ["<C-p>"] = "actions.preview",
+          ["<C-c>"] = "actions.close",
+          ["q"] = "actions.close",
+          ["<C-r>"] = "actions.refresh",
+          ["-"] = "actions.parent",
+          ["_"] = "actions.open_cwd",
+          ["`"] = "actions.cd",
+          ["~"] = "actions.tcd",
+          ["gs"] = "actions.change_sort",
+          ["gx"] = "actions.open_external",
+          ["g."] = "actions.toggle_hidden",
+        },
+      })
     end
   }
 })
