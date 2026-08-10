@@ -10,10 +10,10 @@ local keymap = {
     {"n", "<Esc><Esc>", ":nohlsearch<CR><Esc>", {noremap=true, silent=true}},
     {"n", "<leader><leader>c", "<cmd>ClaudeCode<CR>", {noremap=true, silent=true}},
 
-    -- telescope
-    {"n", "<Space><Space>f", "<cmd>Telescope find_files hidden=true<cr>", {noremap=true, silent=true}},
-    {"n", "<Space><Space>b", "<cmd>Telescope buffers<cr>", {noremap=true, silent=true}},
-    {"n", "<leader>g", "<cmd>Telescope live_grep<cr>", {noremap=true, silent=true}},
+    -- fzf-lua
+    {"n", "<Space><Space>f", "<cmd>FzfLua files<cr>", {noremap=true, silent=true}},
+    {"n", "<Space><Space>b", "<cmd>FzfLua buffers<cr>", {noremap=true, silent=true}},
+    {"n", "<leader>g", "<cmd>FzfLua live_grep<cr>", {noremap=true, silent=true}},
 
     -- window移動
     {"n", "<C-h>", "<C-w>h", {noremap=true, silent=true}},
