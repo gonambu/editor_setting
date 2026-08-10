@@ -4,57 +4,73 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a Neovim configuration repository with a Lua-based setup using Packer.nvim as the plugin manager. The configuration is structured with modular Lua files for different aspects of the editor setup.
+Neovim configuration written in Lua, managed by lazy.nvim. Requires Neovim >= 0.12 and the
+`tree-sitter` CLI (`brew install tree-sitter-cli`).
+
+Install by symlinking `nvim/` to `~/.config/nvim`.
 
 ## Architecture
 
-- **nvim/init.lua**: Main configuration entry point that loads plugins via Packer, sets up LSP, completion, and imports modular configuration files
-- **nvim/lua/**: Contains modular configuration files:
-  - `disable_default_plugin.lua`: Disables unwanted default Neovim plugins for performance
-  - `keymaps.lua`: Custom key mappings including Telescope shortcuts and window navigation
-  - `options.lua`: Vim options and settings
+- `nvim/init.lua`: entry point. Sets leader, loads core modules, bootstraps lazy.nvim, imports `lua/plugins/`
+- `nvim/lua/options.lua`: vim options
+- `nvim/lua/keymaps.lua`: global key mappings
+- `nvim/lua/disable_default_plugin.lua`: disables bundled plugins for startup time
+- `nvim/lua/lsp.lua`: per-server settings via `vim.lsp.config()`, diagnostics, `LspAttach` key mappings
+- `nvim/lua/plugins/*.lua`: one file per concern, each returning a lazy.nvim spec list
+
+## Conventions
+
+- LSP servers are configured with `vim.lsp.config()` and enabled by mason-lspconfig's `automatic_enable`.
+  Do not use `require('lspconfig').<server>.setup{}` — the framework was removed in nvim-lspconfig v3.
+- nvim-treesitter is pinned to the `main` branch. It has no `ensure_installed` or `highlight` options;
+  parsers are installed with `require('nvim-treesitter').install()` and highlighting starts from a
+  `FileType` autocmd.
+- Formatting is conform.nvim, linting is nvim-lint. Do not reintroduce none-ls.
+- Plugin `keys` specs must not collide with mappings in `keymaps.lua`, which is loaded before lazy.nvim.
 
 ## Key Components
 
-### Plugin Management
-- Uses Lazy.nvim for plugin management
-- Plugins are lazy-loaded using events, keys, and commands
-- Plugin configurations are defined inline within the Lazy setup
-- Auto-installs Lazy.nvim if not present
+| Concern | Plugin |
+|---|---|
+| Plugin manager | lazy.nvim |
+| Colorscheme | tokyonight |
+| Completion | blink.cmp |
+| Fuzzy finder | fzf-lua |
+| LSP install | mason.nvim + mason-lspconfig.nvim |
+| Format / lint | conform.nvim + nvim-lint (prettier, ktlint, eslint_d) |
+| Syntax | nvim-treesitter (`main`) |
+| File explorer | oil.nvim |
+| Statusline / bufferline | lualine.nvim, bufferline.nvim |
+| Git | gitsigns.nvim |
+| AI | claudecode.nvim |
 
-### LSP Setup
-- Mason.nvim for LSP server management
-- Configured LSP servers: lua_ls, tsserver
-- Auto-formatting on save via none-ls (formerly null-ls)
-- Linting: eslint_d, ktlint
-- Formatting: prettier
+LSP servers: `lua_ls`, `ts_ls`, `terraformls`, `rust_analyzer`.
 
-### Key Features
-- File explorer: Fern.vim (toggle with `<Leader>n`)
-- Fuzzy finder: Telescope.nvim with custom mappings
-- Completion: nvim-cmp with multiple sources
-- Git integration: gitsigns.nvim
-- Theme: gruvbox
-- Auto-pairs, commentary, and surround functionality
+## Key Mappings
 
-### Key Mappings
-- Leader key: Space
-- File finder: `<Space><Space>f`
-- Buffer switcher: `<Space><Space>b`
-- Live grep: `<Leader>g`
-- Tab management: `<Space>t` (new), `<Space>h/l` (navigate)
-- LSP: `<Leader>df` (definition in new tab), `<Leader>v` (hover), `<Leader>rn` (rename)
+Leader is `<Space>`.
+
+| Mapping | Action |
+|---|---|
+| `<Space><Space>f` | Find files |
+| `<Space><Space>b` | Buffers |
+| `<Leader>g` | Live grep |
+| `<Leader>n` | Toggle oil (float) |
+| `<Space>h` / `<Space>l` | Prev / next buffer |
+| `<Space>x` / `<Space>X` | Close buffer / other buffers |
+| `<Leader>df` | Go to definition (new tab if another file) |
+| `<Leader>v` | Hover |
+| `<Leader>rn` | Rename |
+| `<Leader>ca` | Code action |
+| `<Leader>rf` | References |
+| `<Leader>fmt` | Format buffer |
+| `<Leader>ac` / `<C-,>` | Toggle Claude Code |
 
 ## Development Commands
 
-This repository contains only configuration files, so there are no build, test, or lint commands to run. Changes can be tested by:
+Configuration only; there is nothing to build or test. Verify changes by:
 
-1. Reloading Neovim configuration: `:source %` or restart Neovim
-2. Installing/updating plugins: `:Lazy` to open Lazy interface, `:Lazy sync` to sync plugins
-3. LSP server management: `:Mason` to open Mason interface
-
-## File Structure
-
-- Main configuration files are in `nvim/` directory
-- Lua modules are organized in `nvim/lua/` subdirectory
-- Plugin-specific configurations are embedded in `init.lua`
+1. Restarting Neovim, or `:source %` for standalone modules
+2. `:Lazy sync` to install/update plugins, `:Lazy profile` to inspect startup cost
+3. `:Mason` to manage servers and tools, `:checkhealth vim.lsp` to inspect LSP state
+4. `:TSUpdate` to update treesitter parsers
